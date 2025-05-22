@@ -1,0 +1,6 @@
+    python database/work_schemas/generate_massive_data.py
+     python database/work_schemas/delete_ships.py
+     http://localhost:8000/docs#/
+     uvicorn Backend.main:app --reload
+     npm run serve
+    python Backend/test_auth.py
