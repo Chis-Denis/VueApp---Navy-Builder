@@ -24,6 +24,7 @@ from dotenv import load_dotenv
 import logging
 from logging.handlers import RotatingFileHandler
 from starlette.datastructures import CommaSeparatedStrings
+from ast import literal_eval
 
 # Load environment variables
 load_dotenv()
@@ -67,17 +68,17 @@ frontend_origins = [
     "http://localhost:8080"  # for local testing
 ]
 
-cors_env = os.getenv("CORS_ORIGINS", "")
-print(f"CORS_ORIGINS raw value: {cors_env}")
-cors_origins = [origin.strip() for origin in cors_env.split(",") if origin.strip()]
+cors_env = os.getenv("CORS_ORIGINS", "[]")
+cors_origins = literal_eval(cors_env)  # Parses stringified list
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[origin.strip() for origin in cors_origins if origin.strip()],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 print("Loaded CORS origins:", cors_origins)
 
