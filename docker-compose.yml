@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - ENVIRONMENT=development
+      - DATABASE_URL=sqlite:///./navy.db
+      - FRONTEND_URL=http://localhost:8080
+    command: python run_server.py
+
+  frontend:
+    build: 
+      context: ./Frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./Frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VUE_APP_API_URL=http://localhost:8000
+      - VUE_APP_WS_URL=ws://localhost:8000/ws
+    command: npm run serve
+
+  # Add PostgreSQL for production-like environment
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=navy
+      - POSTGRES_PASSWORD=navy123
+      - POSTGRES_DB=navy
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data: 

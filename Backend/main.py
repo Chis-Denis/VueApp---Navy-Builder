@@ -1,7 +1,9 @@
-from fastapi import FastAPI, Depends, HTTPException, WebSocket, UploadFile, File
+from fastapi import FastAPI, Depends, HTTPException, WebSocket, UploadFile, File, Request
 from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String, or_, Date, func, Index, case
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.security import OAuth2PasswordBearer
 from typing import Optional, List
 from database.database import Base, Ship, get_db, engine
 from database.models import User, ActivityLog
@@ -17,6 +19,29 @@ from collections import Counter
 from Backend.routers import auth
 from Backend.services.monitoring_service import start_monitoring, stop_monitoring, log_activity
 from Backend.services.auth_service import get_current_user
+import os
+from dotenv import load_dotenv
+import logging
+from logging.handlers import RotatingFileHandler
+
+# Load environment variables
+load_dotenv()
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        RotatingFileHandler(
+            'app.log',
+            maxBytes=10000000,
+            backupCount=5
+        ),
+        logging.StreamHandler()
+    ]
+)
+
+logger = logging.getLogger(__name__)
 
 # =============================================
 # FastAPI App Configuration
@@ -24,17 +49,44 @@ from Backend.services.auth_service import get_current_user
 app = FastAPI(
     title="Naval Ships API",
     description="API for managing a database of naval ships",
-    version="1.0.0"
+    version="1.0.0",
+    docs_url="/api/docs" if os.getenv("ENVIRONMENT") == "production" else "/docs",
+    redoc_url="/api/redoc" if os.getenv("ENVIRONMENT") == "production" else "/redoc"
 )
 
-# Enable CORS
+# Security middleware
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=["*"] if os.getenv("ENVIRONMENT") != "production" else [
+        "localhost",
+        "127.0.0.1",
+        os.getenv("FRONTEND_URL", "").replace("https://", "").replace("http://", "")
+    ]
+)
+
+# CORS configuration
+origins = [
+    "http://localhost:8080",
+    "http://localhost:3000",
+    os.getenv("FRONTEND_URL", "")
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Request timing middleware
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    response.headers["X-Process-Time"] = str(process_time)
+    return response
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -439,8 +491,13 @@ async def sort_by_service_duration(
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
-    return {"status": "ok"}
+    """Enhanced health check endpoint"""
+    return {
+        "status": "ok",
+        "version": "1.0.0",
+        "environment": os.getenv("ENVIRONMENT", "development"),
+        "database": "connected" if engine.pool.checkedin() > 0 else "disconnected"
+    }
 
 @app.get("/auto-generation/status")
 async def auto_generation_status():

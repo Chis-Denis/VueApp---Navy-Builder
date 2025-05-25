@@ -1,9 +1,10 @@
 import axios from 'axios';
 import NetworkService from './NetworkService';
+import config from '../config';
 
 // Create axios instance with base URL
 const api = axios.create({
-    baseURL: 'http://localhost:8000'
+    baseURL: config.apiBaseUrl
 });
 
 // Add a request interceptor to include the Authorization header if token exists
@@ -21,7 +22,7 @@ api.interceptors.request.use(
 class ShipService {
     async getAllShips() {
         try {
-            const response = await api.get('/ships');
+            const response = await api.get(config.endpoints.ships);
             return response.data;
         } catch (error) {
             if (!NetworkService.isConnected()) {
@@ -35,7 +36,7 @@ class ShipService {
 
     async addShip(ship) {
         if (NetworkService.isConnected()) {
-            const response = await api.post('/ships', ship);
+            const response = await api.post(config.endpoints.ships, ship);
             return response.data;
         } else {
             // Add to offline queue
@@ -60,7 +61,7 @@ class ShipService {
 
     async updateShip(id, ship) {
         if (NetworkService.isConnected()) {
-            const response = await api.put(`/ships/${id}`, ship);
+            const response = await api.put(`${config.endpoints.ships}/${id}`, ship);
             return response.data;
         } else {
             // Add to offline queue
@@ -88,7 +89,7 @@ class ShipService {
 
     async deleteShip(id) {
         if (NetworkService.isConnected()) {
-            await api.delete(`/ships/${id}`);
+            await api.delete(`${config.endpoints.ships}/${id}`);
             return true;
         } else {
             // Add to offline queue
@@ -107,4 +108,43 @@ class ShipService {
     }
 }
 
-export default new ShipService(); 
+export default new ShipService();
+
+export const getShips = async () => {
+    const response = await api.get(config.endpoints.ships);
+    return response.data;
+};
+
+export const getShipById = async (id) => {
+    const response = await api.get(`${config.endpoints.ships}/${id}`);
+    return response.data;
+};
+
+export const createShip = async (ship) => {
+    const response = await api.post(config.endpoints.ships, ship);
+    return response.data;
+};
+
+export const updateShip = async (id, ship) => {
+    const response = await api.put(`${config.endpoints.ships}/${id}`, ship);
+    return response.data;
+};
+
+export const deleteShip = async (id) => {
+    await api.delete(`${config.endpoints.ships}/${id}`);
+};
+
+export const searchShips = async (query) => {
+    const response = await api.get(`${config.endpoints.ships}/search/?query=${query}`);
+    return response.data;
+};
+
+export const filterShips = async (filters) => {
+    const response = await api.get(`${config.endpoints.ships}/filter/`, { params: filters });
+    return response.data;
+};
+
+export const getStatistics = async () => {
+    const response = await api.get(config.endpoints.statistics);
+    return response.data;
+}; 
