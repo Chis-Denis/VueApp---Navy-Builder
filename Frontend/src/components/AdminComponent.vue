@@ -37,6 +37,7 @@
 
 <script>
 import axios from 'axios';
+import config from '../config';
 
 export default {
   name: 'AdminComponent',
@@ -52,7 +53,7 @@ export default {
     async fetchUsers() {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:8000/auth/admin/users', {
+        const response = await axios.get(`${config.apiBaseUrl}/auth/admin/users`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -65,7 +66,7 @@ export default {
     async toggleMonitoring(user) {
       try {
         const token = localStorage.getItem('token');
-        await axios.post(`http://localhost:8000/auth/admin/users/${user.id}/toggle-monitoring`, {}, {
+        await axios.post(`${config.apiBaseUrl}/auth/admin/users/${user.id}/toggle-monitoring`, {}, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

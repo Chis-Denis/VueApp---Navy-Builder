@@ -12,7 +12,7 @@ class WebSocketService {
         this.isConnecting = true;
 
         try {
-            this.ws = new WebSocket('ws://127.0.0.1:8000/ws');
+            this.ws = new WebSocket(process.env.VUE_APP_WS_URL || 'ws://127.0.0.1:8000/ws');
 
             this.ws.onopen = () => {
                 console.log('WebSocket connected successfully');

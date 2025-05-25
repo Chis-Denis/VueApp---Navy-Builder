@@ -60,7 +60,8 @@
 
 <script>
 import axios from 'axios';
-const FILE_API_URL = "http://localhost:8000/files";
+import config from '../config';
+const FILE_API_URL = config.apiBaseUrl + '/files';
 
 export default {
   name: 'FilesComponent',

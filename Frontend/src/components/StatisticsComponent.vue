@@ -52,6 +52,7 @@
 <script>
 import axios from 'axios';
 import { Chart, registerables } from 'chart.js';
+import config from '../config';
 Chart.register(...registerables);
 
 export default {
@@ -73,7 +74,7 @@ export default {
   async mounted() {
     this.loading = true;
     try {
-      const response = await axios.get('http://localhost:8000/ships/statistics');
+      const response = await axios.get(`${config.apiBaseUrl}/ships/statistics`);
       this.stats = response.data;
       this.error = null;
     } catch (err) {
@@ -89,7 +90,7 @@ export default {
       if (this.ships.length === 0) {
         try {
           const token = localStorage.getItem('token');
-          const response = await axios.get('http://localhost:8000/ships/', {
+          const response = await axios.get(`${config.apiBaseUrl}/ships/`, {
             headers: {
               Authorization: `Bearer ${token}`
             }

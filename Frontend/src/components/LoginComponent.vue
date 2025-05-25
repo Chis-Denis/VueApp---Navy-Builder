@@ -92,6 +92,7 @@
 
 <script>
 import axios from 'axios';
+import config from '../config';
 
 export default {
   name: 'LoginComponent',
@@ -121,13 +122,13 @@ export default {
         formData.append('username', this.username);
         formData.append('password', this.password);
 
-        const response = await axios.post('http://localhost:8000/auth/token', formData);
+        const response = await axios.post(`${config.apiBaseUrl}/auth/token`, formData);
         
         // Store the token
         localStorage.setItem('token', response.data.access_token);
         
         // Get user info
-        const userResponse = await axios.get('http://localhost:8000/auth/users/me', {
+        const userResponse = await axios.get(`${config.apiBaseUrl}/auth/users/me`, {
           headers: {
             'Authorization': `Bearer ${response.data.access_token}`
           }
@@ -155,7 +156,7 @@ export default {
       this.registerError = null;
       this.registerSuccess = null;
       try {
-        await axios.post('http://localhost:8000/auth/register', {
+        await axios.post(`${config.apiBaseUrl}/auth/register`, {
           username: this.regUsername,
           email: this.regEmail,
           password: this.regPassword,

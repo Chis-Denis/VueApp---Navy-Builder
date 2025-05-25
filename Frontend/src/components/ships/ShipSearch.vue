@@ -33,8 +33,9 @@
 
 <script>
 import axios from 'axios';
+import config from '../../config';
 
-const API_URL = 'http://localhost:8000/ships';
+const API_URL = config.apiBaseUrl + '/ships';
 
 export default {
   name: 'SearchComponent',

@@ -5,7 +5,7 @@ class NetworkService {
     constructor() {
         this.isOnline = navigator.onLine;
         this.isServerAvailable = true;
-        this.serverCheckUrl = 'http://localhost:8000/health'; // Adjust this to your actual health check endpoint
+        this.serverCheckUrl = (process.env.VUE_APP_API_URL || 'http://localhost:8000') + '/health'; // Use env variable or fallback
         this.offlineQueue = [];
         this.syncInterval = null;
         
