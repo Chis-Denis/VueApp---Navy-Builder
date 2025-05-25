@@ -60,10 +60,15 @@ app.add_middleware(
     allowed_hosts=["*"]
 )
 
-# Allow all origins for CORS during local development
+# CORS settings for both local and production
+frontend_origins = [
+    "http://localhost:8080",
+    os.getenv("FRONTEND_PROD_URL", "https://vue-app-navy-builder-3jddx2ttm-chis-denis-projects.vercel.app")
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=frontend_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
