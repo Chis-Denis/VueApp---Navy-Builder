@@ -108,7 +108,7 @@ class ShipService {
     }
 }
 
-export default new ShipService();
+export default new ShipService(); 
 
 export const getShips = async () => {
     const response = await api.get(config.endpoints.ships);
