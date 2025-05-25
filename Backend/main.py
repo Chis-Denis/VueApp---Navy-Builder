@@ -23,6 +23,7 @@ import os
 from dotenv import load_dotenv
 import logging
 from logging.handlers import RotatingFileHandler
+from starlette.datastructures import CommaSeparatedStrings
 
 # Load environment variables
 load_dotenv()
@@ -62,17 +63,20 @@ app.add_middleware(
 
 # CORS settings for both local and production
 frontend_origins = [
-    "http://localhost:8080",
-    os.getenv("FRONTEND_PROD_URL", "https://vue-app-navy-builder-3jddx2ttm-chis-denis-projects.vercel.app")
+    "https://vue-app-navy-builder-mf2ov0kbv-chis-denis-projects.vercel.app",  # your Vercel frontend
+    "http://localhost:8080"  # for local testing
 ]
+
+cors_origins = os.getenv("CORS_ORIGINS", "").split(",")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[origin.strip() for origin in cors_origins if origin.strip()],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Request timing middleware
 @app.middleware("http")
