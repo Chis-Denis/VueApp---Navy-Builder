@@ -34,6 +34,7 @@ A full-stack web application for managing and tracking naval ships, built with F
 - Python-Jose (JWT tokens)
 - Passlib (Password hashing)
 - SQLite (Database)
+- Railway (Deployment platform)
 
 ### Frontend
 - Vue.js 3
@@ -41,6 +42,7 @@ A full-stack web application for managing and tracking naval ships, built with F
 - Axios (HTTP client)
 - Chart.js (Data visualization)
 - Vite (Build tool)
+- Vercel (Deployment platform)
 
 ## 📋 Prerequisites
 
@@ -74,6 +76,8 @@ npm install
 
 ## 🏃‍♂️ Running the Application
 
+### Local Development
+
 1. Start the backend server:
 ```bash
 python run_server.py
@@ -86,6 +90,12 @@ cd Frontend
 npm run serve
 ```
 The frontend will be available at `http://localhost:8080`
+
+### Production Deployment
+
+The application is deployed and accessible at:
+- Frontend: [Vercel Deployment URL]
+- Backend: [Railway Deployment URL]
 
 ## 🧪 Testing
 
@@ -102,9 +112,9 @@ npm run test
 
 ## 📚 API Documentation
 
-Once the server is running, you can access the API documentation at:
-- Swagger UI: `http://localhost:8000/docs`
-- ReDoc: `http://localhost:8000/redoc`
+The API documentation is available at:
+- Swagger UI: `[Railway Backend URL]/docs`
+- ReDoc: `[Railway Backend URL]/redoc`
 
 ## 🔒 Environment Variables
 
@@ -114,6 +124,8 @@ SECRET_KEY=your_secret_key
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
+
+For production deployment on Railway, these environment variables should be configured in the Railway dashboard.
 
 ## 📝 Project Structure
 
