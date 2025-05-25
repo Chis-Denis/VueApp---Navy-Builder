@@ -89,7 +89,7 @@ async def add_process_time_header(request: Request, call_next):
     return response
 
 # Create database tables
-Base.metadata.create_all(bind=engine)
+# Base.metadata.create_all(bind=engine)
 
 # Include routers
 app.include_router(auth.router, prefix="/auth", tags=["authentication"])
