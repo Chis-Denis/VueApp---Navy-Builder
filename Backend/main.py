@@ -67,7 +67,9 @@ frontend_origins = [
     "http://localhost:8080"  # for local testing
 ]
 
-cors_origins = os.getenv("CORS_ORIGINS", "").split(",")
+cors_env = os.getenv("CORS_ORIGINS", "")
+print(f"CORS_ORIGINS raw value: {cors_env}")
+cors_origins = [origin.strip() for origin in cors_env.split(",") if origin.strip()]
 
 app.add_middleware(
     CORSMiddleware,
