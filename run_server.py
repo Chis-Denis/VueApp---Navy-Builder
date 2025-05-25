@@ -8,7 +8,7 @@ load_dotenv()
 if __name__ == "__main__":
     # Get configuration from environment variables
     host = os.getenv("HOST", "0.0.0.0")
-    port = 8000  # Force port 8000 for Railway
+    port = int(os.getenv("PORT", "8000"))
     workers = int(os.getenv("WORKERS", "1"))
     reload = os.getenv("ENVIRONMENT") != "production"
     
