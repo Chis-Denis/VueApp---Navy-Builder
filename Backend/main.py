@@ -57,11 +57,7 @@ app = FastAPI(
 # Security middleware
 app.add_middleware(
     TrustedHostMiddleware,
-    allowed_hosts=["*"] if os.getenv("ENVIRONMENT") != "production" else [
-        "localhost",
-        "127.0.0.1",
-        os.getenv("FRONTEND_URL", "").replace("https://", "").replace("http://", "")
-    ]
+    allowed_hosts=["*"]
 )
 
 # Allow all origins for CORS during local development
