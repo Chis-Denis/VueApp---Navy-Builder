@@ -300,7 +300,6 @@ class ShipCreate(ShipBase):
 class ShipResponse(ShipBase):
     """Pydantic model for ship responses"""
     id: int
-
     class Config:
         from_attributes = True
 
@@ -491,13 +490,7 @@ async def sort_by_service_duration(
 
 @app.get("/health")
 async def health_check():
-    """Enhanced health check endpoint"""
-    return {
-        "status": "ok",
-        "version": "1.0.0",
-        "environment": os.getenv("ENVIRONMENT", "development"),
-        "database": "connected" if engine.pool.checkedin() > 0 else "disconnected"
-    }
+    return {"status": "ok"}
 
 @app.get("/auto-generation/status")
 async def auto_generation_status():
