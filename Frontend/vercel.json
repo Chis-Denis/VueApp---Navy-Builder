@@ -16,7 +16,7 @@
     }
   ],
   "env": {
-    "VUE_APP_API_URL": "https://your-backend-api.com",
-    "VUE_APP_WS_URL": "wss://your-backend-api.com/ws"
+    "VUE_APP_API_URL": "https://vueapp-navy-builder-production.up.railway.app",
+    "VUE_APP_WS_URL": "wss://vueapp-navy-builder-production.up.railway.app/ws"
   }
 } 
