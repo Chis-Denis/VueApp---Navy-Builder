@@ -64,16 +64,10 @@ app.add_middleware(
     ]
 )
 
-# CORS configuration
-origins = [
-    "http://localhost:8080",
-    "http://localhost:3000",
-    os.getenv("FRONTEND_URL", "")
-]
-
+# Allow all origins for CORS during local development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -88,8 +82,9 @@ async def add_process_time_header(request: Request, call_next):
     response.headers["X-Process-Time"] = str(process_time)
     return response
 
-# Create database tables
-# Base.metadata.create_all(bind=engine)
+# Create tables for local SQLite development
+from database.database import Base, engine
+Base.metadata.create_all(bind=engine)
 
 # Include routers
 app.include_router(auth.router, prefix="/auth", tags=["authentication"])
