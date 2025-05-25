@@ -171,11 +171,10 @@ import FilterComponent from './ships/ShipFilter.vue';
 import AddComponent from './ships/ShipForm.vue';
 import UpdateComponent from './ships/ShipUpdate.vue';
 import { websocketService } from '../services/websocket';
-import config from '../config';
 
 // API endpoint for ship operations
-const API_URL = config.apiBaseUrl + '/ships';
-const FILE_API_URL = config.apiBaseUrl + '/files';
+const API_URL = "http://localhost:8000/ships";
+const FILE_API_URL = "http://localhost:8000/files";
 
 export default {
   name: 'MainComponent',
@@ -243,7 +242,7 @@ export default {
         console.log("Attempted to disable auto-generation, success:", sent);
         
         // Also use the HTTP API as a backup method
-        axios.post(`${config.apiBaseUrl}/auto-generation/toggle`, { enable: false })
+        axios.post("http://localhost:8000/auto-generation/toggle", { enable: false })
           .then(response => {
             console.log("Auto-generation disabled via API:", response.data);
           })
