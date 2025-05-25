@@ -77,6 +77,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+print("Loaded CORS origins:", cors_origins)
 
 # Request timing middleware
 @app.middleware("http")
