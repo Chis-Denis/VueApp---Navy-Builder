@@ -42,7 +42,7 @@
 // Component Imports
 import AlertComponent from './components/files/AlertComponent.vue'
 import NetworkStatus from './components/files/NetworkStatus.vue'
-import { websocketService } from './services/websocket'
+import { ref, onMounted } from 'vue'
 
 // Alert Configuration
 const ALERT_DURATION = 3000; // Duration in milliseconds for auto-dismissing alerts
@@ -53,6 +53,41 @@ export default {
   components: {
     AlertComponent,
     NetworkStatus
+  },
+
+  setup() {
+    const ships = ref([])
+    const loading = ref(true)
+    const error = ref(null)
+
+    const fetchShips = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:8000/ships', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch ships')
+        }
+        ships.value = await response.json()
+      } catch (err) {
+        error.value = err.message
+      } finally {
+        loading.value = false
+      }
+    }
+
+    onMounted(() => {
+      fetchShips()
+    })
+
+    return {
+      ships,
+      loading,
+      error
+    }
   },
 
   data() {
@@ -71,12 +106,6 @@ export default {
   created() {
     // Check authentication status
     this.checkAuth();
-
-    // Connect to WebSocket when component is created
-    websocketService.connect();
-
-    // Subscribe to WebSocket updates
-    websocketService.subscribe(this.handleWebSocketMessage);
   },
 
   methods: {
@@ -97,22 +126,6 @@ export default {
     goToAdmin() {
       this.$router.push('/admin');
     },
-    /**
-     * Handles incoming WebSocket messages
-     * @param {Object} data - The WebSocket message data
-     */
-    handleWebSocketMessage(data) {
-      if (data.type === 'new_ship') {
-        // Emit an event that can be caught by child components
-        this.$eventBus.$emit('new-ship-added', data.data);
-        
-        // Only show notification for user-added ships
-        if (data.data.source === 'user') {
-          this.showAlert(`New ship added: ${data.data.name}`, 'success');
-        }
-      }
-    },
-
     /**
      * Shows an alert message with specified type
      * @param {string} message - The message to display

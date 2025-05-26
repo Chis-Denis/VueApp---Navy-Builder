@@ -73,7 +73,7 @@
         <tbody>
           <tr v-for="ship in paginatedShips" :key="ship.id" :class="getRowClass(ship)">
             <td>{{ ship.id }}</td>
-            <td>{{ ship.name }} <span v-if="newSystemShips.has(ship.id)" class="new-tag">NEW</span></td>
+            <td>{{ ship.name }}</td>
             <td>{{ ship.year_built }}</td>
             <td>{{ ship.commissioned_date }}</td>
             <td>{{ ship.stricken_date }}</td>
@@ -102,14 +102,7 @@
     <!-- Loading indicator - moved outside ships-table -->
     <div v-if="isLoading" class="loading-indicator">
       <div class="loading-spinner"></div>
-      <span>Generating more ships...</span>
-    </div>
-
-    <!-- Load More Button -->
-    <div v-if="!isLoading && hasMoreShips && currentPage === totalPages" class="load-more-container">
-      <button @click="generateMoreShips" class="load-more-btn">
-        <i class="fas fa-plus"></i> LOAD MORE SHIPS
-      </button>
+      <span>Loading ships...</span>
     </div>
 
     <!-- Chisu Capitanu Aesthetic Banner -->
@@ -170,11 +163,9 @@ import SearchComponent from './ships/ShipSearch.vue';
 import FilterComponent from './ships/ShipFilter.vue';
 import AddComponent from './ships/ShipForm.vue';
 import UpdateComponent from './ships/ShipUpdate.vue';
-import { websocketService } from '../services/websocket';
 
 // API endpoint for ship operations
 const API_URL = "http://localhost:8000/ships";
-const FILE_API_URL = "http://localhost:8000/files";
 
 export default {
   name: 'MainComponent',
@@ -211,13 +202,6 @@ export default {
         averageCommissionDate: null
       },
       isLoading: false,
-      hasMoreShips: true,
-      batchSize: 5, // Number of ships to generate at once
-      uploadProgress: 0,
-      isUploading: false,
-      showDownloadModal: false,
-      availableFiles: [],
-      newSystemShips: new Set(), // Track newly added system ships
       currentPage: 1,
       itemsPerPage: 10,
       totalPages: 1,
@@ -233,36 +217,18 @@ export default {
 
   methods: {
     /**
-     * Disable automatic generation of ships on the server
-     */
-    disableAutoGeneration() {
-      try {
-        // Send a message to the websocket to disable auto-generation
-        const sent = websocketService.sendMessage("disable-auto-generation");
-        console.log("Attempted to disable auto-generation, success:", sent);
-        
-        // Also use the HTTP API as a backup method
-        axios.post("http://localhost:8000/auto-generation/toggle", { enable: false })
-          .then(response => {
-            console.log("Auto-generation disabled via API:", response.data);
-          })
-          .catch(error => {
-            console.error("Error disabling via API:", error);
-          });
-      } catch (error) {
-        console.error("Error disabling automatic ship generation:", error);
-      }
-    },
-
-    /**
      * Fetches all ships from the database
      * Used on component mount and after operations that modify data
      */
     async fetchShipsPage(page = 1) {
       this.isLoading = true;
       try {
+        const token = localStorage.getItem('token');
         const response = await axios.get(`${API_URL}/page/`, {
-          params: { page, page_size: this.itemsPerPage }
+          params: { page, page_size: this.itemsPerPage },
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
         });
         this.ships = response.data.ships;
         if (response.data.total === null || response.data.total === undefined) {
@@ -296,34 +262,6 @@ export default {
      */
     handleFilterResults(results) {
       this.ships = results;
-    },
-
-    /**
-     * Handles real-time ship additions from WebSocket
-     * @param {Object} newShip - The newly added ship data
-     */
-    handleRealtimeShipAdd(newShip) {
-      // Add the ship to the list
-      this.ships.push(newShip);
-      this.calculateStatistics();
-      
-      // Set current page to see new ship if user is on the last page
-      const wasOnLastPage = this.currentPage === this.totalPages;
-      
-      // Add NEW tag for system-generated ships
-      if (newShip.source === 'system') {
-        this.newSystemShips.add(newShip.id);
-        setTimeout(() => {
-          this.newSystemShips.delete(newShip.id);
-          // Force a re-render
-          this.ships = [...this.ships];
-        }, 60000); // NEW tag stays for 1 minute
-      }
-      
-      // Update pagination to show the new ship if user was on the last page
-      if (wasOnLastPage) {
-        this.currentPage = this.totalPages;
-      }
     },
 
     /**
@@ -366,7 +304,12 @@ export default {
     async handleConfirm(confirmed) {
       if (confirmed && this.shipToDelete) {
         try {
-          const response = await axios.delete(`${API_URL}/${this.shipToDelete}`);
+          const token = localStorage.getItem('token');
+          const response = await axios.delete(`${API_URL}/${this.shipToDelete}`, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
           if (response.status === 200) {
             await this.fetchShips();
             this.showAlert('Ship deleted successfully!', 'success');
@@ -495,117 +438,6 @@ export default {
       this.fetchShipsPage(page);
     },
 
-    async handleFileUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const formData = new FormData();
-      formData.append('file', file);
-
-      this.isUploading = true;
-      this.uploadProgress = 0;
-
-      try {
-        await axios.post(`${FILE_API_URL}/upload`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          },
-          onUploadProgress: (progressEvent) => {
-            this.uploadProgress = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
-            );
-          }
-        });
-
-        this.showAlert('File uploaded successfully!', 'success');
-        // Don't automatically fetch files anymore
-      } catch (error) {
-        console.error('Error uploading file:', error);
-        this.showAlert('Error uploading file. Please try again.', 'error');
-      } finally {
-        this.isUploading = false;
-        this.uploadProgress = 0;
-        // Clear the file input
-        event.target.value = '';
-      }
-    },
-
-    async showDownloadDialog() {
-      try {
-        await this.fetchAvailableFiles();
-        this.showDownloadModal = true;
-      } catch (error) {
-        console.error('Error fetching files:', error);
-        this.showAlert('Error fetching available files.', 'error');
-      }
-    },
-
-    closeDownloadDialog() {
-      this.showDownloadModal = false;
-      this.availableFiles = [];
-    },
-
-    async fetchAvailableFiles() {
-      try {
-        const response = await axios.get(`${FILE_API_URL}/list`);
-        this.availableFiles = response.data;
-      } catch (error) {
-        console.error('Error fetching files:', error);
-        this.showAlert('Error fetching available files.', 'error');
-      }
-    },
-
-    async downloadFile(filename) {
-      try {
-        const response = await axios.get(`${FILE_API_URL}/download/${filename}`, {
-          responseType: 'blob'
-        });
-
-        // Create a blob URL and trigger download
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', filename);
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        window.URL.revokeObjectURL(url);
-      } catch (error) {
-        console.error('Error downloading file:', error);
-        this.showAlert('Error downloading file. Please try again.', 'error');
-      }
-    },
-
-    /**
-     * Triggers generation of more ships when the Load More button is clicked
-     */
-    async generateMoreShips() {
-      if (this.isLoading || !this.hasMoreShips) return;
-      
-      this.isLoading = true; // Show loading before generating
-      
-      try {
-        // Use the websocket service to send the message directly
-        const sent = websocketService.sendMessage("generate-ship");
-        if (!sent) {
-          this.showAlert('Failed to connect to server. Please try again.', 'error');
-          this.isLoading = false;
-          return;
-        }
-        
-        // Wait for the batch to complete
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Stay on the last page to see new ships
-        this.currentPage = Math.ceil(this.ships.length / this.itemsPerPage);
-      } catch (error) {
-        console.error('Error generating ships:', error);
-        this.showAlert('Error generating ships. Please try again.', 'error');
-      } finally {
-        this.isLoading = false;
-      }
-    },
-
     async fetchShips() {
       await this.fetchShipsPage(1);
     },
@@ -615,16 +447,6 @@ export default {
   mounted() {
     // Initial ships fetch
     this.fetchShips();
-    this.fetchAvailableFiles();
-    
-    // Disable automatic ship generation
-    this.disableAutoGeneration();
-    
-    // Listen for new ship events from WebSocket
-    this.$eventBus.$on('new-ship-added', (newShip) => {
-      // Handle the ship addition
-      this.handleRealtimeShipAdd(newShip);
-    });
     
     // Initialize audio element
     if (this.$refs.bgMusic) {
@@ -633,9 +455,6 @@ export default {
   },
 
   beforeUnmount() {
-    // Clean up event listener
-    this.$eventBus.$off('new-ship-added');
-    
     // Stop music when component is destroyed
     if (this.$refs.bgMusic) {
       this.$refs.bgMusic.pause();
@@ -1128,38 +947,6 @@ td.actions {
   0% { opacity: 0.7; }
   50% { opacity: 1; }
   100% { opacity: 0.7; }
-}
-
-/* Load More Button Styles */
-.load-more-container {
-  display: flex;
-  justify-content: center;
-  padding: 20px;
-  background-color: rgba(13, 27, 42, 0.7);
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(0, 247, 255, 0.1);
-}
-
-.load-more-btn {
-  padding: 12px 24px;
-  font-size: 1em;
-  background: linear-gradient(to bottom, rgba(13, 27, 42, 0.9), rgba(13, 27, 42, 0.7));
-  border: 1px solid rgba(0, 247, 255, 0.3);
-  color: #00f7ff;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-weight: bold;
-}
-
-.load-more-btn:hover {
-  background: linear-gradient(to bottom, rgba(0, 247, 255, 0.1), rgba(0, 247, 255, 0.05));
-  border-color: rgba(0, 247, 255, 0.5);
-  transform: translateY(-2px);
-  box-shadow: 0 0 15px rgba(0, 247, 255, 0.2);
 }
 
 /* Pagination Styles */

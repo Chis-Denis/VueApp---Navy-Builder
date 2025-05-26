@@ -6,8 +6,6 @@ A full-stack web application for managing and tracking naval ships, built with F
 
 - **Real-time Ship Management**
   - Add, edit, and delete naval ships
-  - Automatic ship generation with customizable settings
-  - Real-time updates via WebSocket connections
   - Advanced filtering and sorting capabilities
 
 - **Authentication & Security**
