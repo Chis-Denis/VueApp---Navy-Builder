@@ -62,18 +62,12 @@ app.add_middleware(
 
 # CORS settings for both local and production
 frontend_origins = [
-    "https://vue-app-navy-builder-88la3cfn3-chis-denis-projects.vercel.app",  # your Vercel frontend
+    "https://vue-app-navy-builder-mf2ov0kbv-chis-denis-projects.vercel.app",  # your Vercel frontend
     "http://localhost:8080"  # for local testing
 ]
 
 cors_env = os.getenv("CORS_ORIGINS", "[]")
 cors_origins = literal_eval(cors_env)  # Parses stringified list
-
-# Ensure the main frontend is always included
-if "https://vue-app-navy-builder-88la3cfn3-chis-denis-projects.vercel.app" not in cors_origins:
-    cors_origins.append("https://vue-app-navy-builder-88la3cfn3-chis-denis-projects.vercel.app")
-if "http://localhost:8080" not in cors_origins:
-    cors_origins.append("http://localhost:8080")
 
 app.add_middleware(
     CORSMiddleware,
